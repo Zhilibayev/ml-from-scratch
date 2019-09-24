@@ -90,7 +90,7 @@ def test():
     d_prev = np.random.normal(size=(16, 12, 12, 16))
 
     my_conv_forward = conv_layer.forward(X)
-    my_dA, my_dW = conv_layer.backward(d_prev, X, optimizer) 
+    my_dA, my_dW = conv_layer.backward(d_prev, X) 
     my_pool_forward = pool_layer.forward(X)
 
     with tf.device("/cpu:0"):

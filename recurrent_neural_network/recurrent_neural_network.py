@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-class RecurrentNeuralNetwork:
+class RecurrentNeuralNetwork(NeuralNetwork):
 
     def __init__(self, hidden_units, epochs, optimizer, batch_size):
         """
@@ -41,9 +41,9 @@ class RecurrentNeuralNetwork:
         X: time series input, shape = (N, T, D)
         """
         m, timesteps, _ = X.shape
-        self.h0 = np.zeros(shape=(m, self.hidden_units))
+        h0 = np.zeros(shape=(m, self.hidden_units))
         self.states = np.zeros(shape=(m, timesteps, self.hidden_units))
-        self.states[:, 0, :] = tanh(np.dot(X[:, 0, :], self.Wax) + np.dot(self.h0, self.Waa) + self.ba)
+        self.states[:, 0, :] = tanh(np.dot(X[:, 0, :], self.Wax) + np.dot(h0, self.Waa) + self.ba)
         for t in range(1, timesteps):
             self.states[:, t, :] = tanh(np.dot(X[:, t, :], self.Wax) + np.dot(self.states[:, t-1, :], self.Waa) + self.ba)
         Y_hat = np.einsum("nth,hc->ntc", self.states, self.Wy)
@@ -60,34 +60,18 @@ class RecurrentNeuralNetwork:
         dWaa = np.zeros(shape=self.Waa.shape)
         dWax = np.zeros(shape=self.Wax.shape)
         dba = np.zeros(shape=self.ba.shape)
-        dA_chain = np.zeros(shape=self.A_state.shape)
-        da_state = np.zeros(shape=self.a_state.shape)
 
         delta = (Y_hat - Y_train)/m
         dWy = np.einsum("ntc,nth->hc", delta, self.states)
         dby = np.sum(delta, axis=(0, 1))
 
-        for t in range(time_steps):
-            # Compute dA[t] respect to dA[t-1]
-            dA_chain[:, t, :] = tanh_grad(self.A_state[:, t, :]).dot(self.Waa.T)
-        for t in reversed(range(time_steps)):
-            delta = (Y_hat[:, t, :] - Y_train[:, t, :])/m # shape = (m, vocab_len)
-            dWy += self.A_state[:, t, :].T.dot(delta)
-            dby += np.sum(delta, axis=0)
-            for k in range(0, t):
-                same_chain = (delta.dot(self.Wy.T) # shape=(m, hidden_units)
-                                * np.prod(dA_chain[:, k+1:t, :], axis=1) # shape=(m, hidden_units)
-                                * tanh_grad(self.A_state[:, k, :]) # shape=(m, hidden_units)
-                                )
-                if k == 0:
-                    dWaa += np.dot(self.a_state.T, same_chain)
-                else:
-                    dWaa += np.dot(self.A_state[:, k-1, :].T, same_chain)
+        delta = np.einsum("ntc,hc->nth", delta, self.Wy)
+        d_states = np.einsum("ntk,hk->nth", tanh_grad(self.states), self.Waa)
 
-                dWax += np.dot(X_train[:, k, :].T, same_chain)
-                dba += np.sum(same_chain, axis=0)
-            da_state = np.dot(np.prod(dA_chain[:, 1:t, :], axis=1)*tanh_grad(self.A_state[:, 0, :]), self.Waa)
-        self.update_params(dWy, dby, dWaa, dWax, dba, da_state)
+        # for t in reversed(range(time_steps)):
+        #     for i in range(0, t):
+        #         dWaa += delta[:, t, :] * np.prod(d_states[:, i+1:t, :], axis=1)
+        # self.update_params(dWy, dby, dWaa, dWax, dba)
 
     def train(self, X_train, Y_train):
         """
@@ -101,34 +85,20 @@ class RecurrentNeuralNetwork:
         self.Wy = np.random.normal(size=(self.hidden_units, vocab_len))
         self.ba = np.zeros(shape=(1, self.hidden_units))
         self.by = np.zeros(shape=(1, vocab_len))
-        Y_hat = np.zeros(shape=Y_train.shape)
-        for e in range(self.epochs):
-            batch_loss = 0
-            num_batches = 0
-            pbar = tqdm(range(0, X_train.shape[0], self.batch_size), desc="Epoch " + str(e+1))
-            for it in pbar:
-                Y_hat = self._forward(X_train[it:it+self.batch_size])
-                loss = self._loss(Y_train[it:it+self.batch_size], Y_hat)
-                self._backward(X_train[it:it+self.batch_size], Y_train[it:it+self.batch_size], Y_hat)
-                batch_loss += loss
-                num_batches += 1
-                pbar.set_description("Epoch " +str(e+1) + " - Loss: %.4f" % (batch_loss/num_batches))
-            print("Loss at epoch %s: %f" % (e + 1 , batch_loss / num_batches))
+        super().train(X_train, Y_train)
 
-    def update_params(self, dWy, dby, dWaa, dWax, dba, da_state):
+    def update_params(self, dWy, dby, dWaa, dWax, dba):
         """
-        Update parameters of RNN by its gradient. 
+        Update parameters of RNN by its gradient.
         """
         dWy = self.optimizer.minimize(dWy)
         dby = self.optimizer.minimize(dby)
         dWaa = self.optimizer.minimize(dWaa)
         dWax = self.optimizer.minimize(dWax)
         dba = self.optimizer.minimize(dba)
-        da_state = self.optimizer.minimize(da_state)
 
         self.Wy -= dWy
         self.by -= dby
         self.Waa -= dWaa
         self.Wax -= dWax
         self.ba -= dba
-        self.a_state -= da_state

@@ -132,7 +132,7 @@ class NeuralNetwork:
             dA_prev = self.layers[i].backward(dA_prev, self.layers[i-1])
         _ = self.layers[i-1].backward(dA_prev, X)
 
-    def train(self, X_train, Y_train):
+    def train(self, X_train, Y_train, *args):
         """
         Training function.
 
