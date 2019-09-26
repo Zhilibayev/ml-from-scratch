@@ -5,7 +5,7 @@ Docs: https://giangtranml.github.io/ml/machine-learning/neural-network
 """
 
 import numpy as np
-from nn_components.layers import FCLayer, ActivationLayer, BatchNormLayer
+from nn_components.layers import FCLayer, ActivationLayer, BatchNormLayer, DropoutLayer
 from tqdm import tqdm
 
 class NeuralNetwork:
@@ -40,7 +40,7 @@ class NeuralNetwork:
             + weight_init: (str) choose which kind to initialize the weight, either `he` `xavier` or `std`.
             + activation (optional): (str) apply activation to the output of the layer. LINEAR -> ACTIVATION.
             + batch_norm (optional): (any) apply batch norm to the output of the layer. LINEAR -> BATCH NORM -> ACTIVATION.
-        
+            + drop_out (optional): (float) choose rate to drop out neurons.
         """
         layers = []
         for struct in nn_structure:
@@ -57,6 +57,10 @@ class NeuralNetwork:
                 activation = struct["activation"]
                 act_layer = ActivationLayer(activation=activation)
                 layers.append(act_layer)
+            if "drop_out" in struct:
+                drop_out = struct["drop_out"]
+                do_layer = DropoutLayer(drop_out)
+                layers.append(do_layer)
         return layers
 
     def _loss(self, Y, Y_hat):

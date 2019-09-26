@@ -1,5 +1,4 @@
 import numpy as np
-np.seterr(all="raise")
 from nn_components.initializers import he_normal, xavier_normal, standard_normal, he_uniform, xavier_uniform
 from nn_components.activations import relu, sigmoid, tanh, softmax, relu_grad, sigmoid_grad, tanh_grad
 import copy
@@ -407,11 +406,31 @@ class ActivationLayer(Layer):
 
 class DropoutLayer(Layer):
 
+    """
+    Refer to the paper: 
+        http://jmlr.org/papers/volume15/srivastava14a/srivastava14a.pdf
+    """
+
     def __init__(self, keep_prob):
         """
         keep_prob: (float) probability to keep neurons in network, use for dropout technique.
         """
+        assert 0.0 < keep_prob < 1.0, "keep_prob must be in range [0, 1]."
         self.keep_prob = keep_prob
+
+    def forward(self, X, prediction=False):
+        """
+        Drop neurons random uniformly.
+        """
+        self.mask = np.random.uniform(size=X.shape) < self.keep_prob
+        self.output = X * self.mask
+        return self.output
+
+    def backward(self, d_prev, _):
+        """
+        Flow gradient of previous layer [l+1] according backward direction through dropout layer.
+        """
+        return d_prev * self.mask
 
 
 class BatchNormLayer(Layer):

@@ -20,8 +20,8 @@ if training_phase:
 
     optimizer = Adam(learning_rate)
     archs = [
-        {"num_neurons": 100, "weight_init": "he_normal", "activation": "sigmoid", "batch_norm": None},
-        {"num_neurons": 125, "weight_init": "he_normal", "activation": "sigmoid", "batch_norm": None},
+        {"num_neurons": 100, "weight_init": "he_normal", "activation": "relu", "drop_out": 0.8},
+        {"num_neurons": 125, "weight_init": "he_normal", "activation": "relu", "drop_out": 0.8},
         {"num_neurons": 50, "weight_init": "he_normal", "activation": "sigmoid", "batch_norm": None},
         {"num_neurons": labels.shape[1], "weight_init": "he_normal", "activation": "softmax"}]
     nn = NeuralNetwork(epochs, batch_size, optimizer, archs)
