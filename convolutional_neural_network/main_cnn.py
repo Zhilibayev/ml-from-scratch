@@ -1,15 +1,14 @@
 import sys
+import numpy as np
 sys.path.append("..")
 import os
-from libs.utils import load_dataset_mnist, preprocess_data
-from libs.mnist_lib import MNIST
+from libs.utils import one_hot_encoding
 from optimizations_algorithms.optimizers import SGD, SGDMomentum, RMSProp, Adam
 from convolutional_neural_network import CNN
+from keras.datasets.cifar10 import load_data as load_dataset_cifar10
 
 
 def main(use_keras=False):
-    load_dataset_mnist("../libs")
-    mndata = MNIST('../libs/data_mnist')
     arch = [{"type": "conv", "filter_size": (3, 3), "filters": 6, "padding": "SAME", "stride": 1, "activation": "relu", "weight_init": "he_normal"},
             {"type": "pool", "filter_size": (2, 2), "stride": 2, "mode": "max"},
             {"type": "conv", "filter_size": (3, 3), "filters": 16, "padding": "SAME", "stride": 1, "activation": "relu", "weight_init": "he_normal"},
@@ -21,36 +20,38 @@ def main(use_keras=False):
             {"type": "fc", "num_neurons": 64, "weight_init": "he_normal", "activation": "relu"},
             {"type": "fc", "num_neurons": 10, "weight_init": "he_normal", "activation": "softmax"}
             ]
-    epochs = 5
+    epochs = 10
     batch_size = 64
     learning_rate = 0.006
     if use_keras:
-        print("Train MNIST dataset by CNN with Keras/Tensorflow.")
+        print("Train Cifar10 dataset by CNN with Keras/Tensorflow.")
         from keras.optimizers import SGD as SGDKeras
         from cnn_keras import CNNKeras
         training_phase = True
         optimizer = SGDKeras(lr=learning_rate)
         cnn = CNNKeras(epochs=epochs, batch_size=batch_size, optimizer=optimizer, cnn_structure=arch)
     else:
-        print("Train MNIST dataset by CNN with pure Python: Numpy.")
+        print("Train Cifar10 dataset by CNN with pure Python: Numpy.")
         optimizer = Adam(alpha=learning_rate)
         cnn = CNN(epochs=epochs, batch_size=batch_size, optimizer=optimizer, cnn_structure=arch)
         weight_path = "cnn_weights.pickle"
         training_phase = weight_path not in os.listdir(".")
     if training_phase:
-        images, labels = mndata.load_training()
-        images, labels = preprocess_data(images, labels, nn=True)
+        (images_train, labels_train), (_, _) = load_dataset_cifar10()
+        images_train = images_train / 255
+        labels_train = one_hot_encoding(labels_train)
         
         if not use_keras:
-            cnn.train(images, labels)
+            cnn.train(images_train, labels_train)
             cnn.save(weight_path)
         else:
-            cnn.train(images, labels)
+            cnn.train(images_train, labels_train)
             training_phase = False
     if not training_phase:
         import pickle
-        images_test, labels_test = mndata.load_testing()
-        images_test, labels_test = preprocess_data(images_test, labels_test, nn=True, test=True)
+        (_, _), (images_test, labels_test) = load_dataset_cifar10()
+        images_test = images_test / 255
+        labels_test = np.squeeze(labels_test)
         if not use_keras:
             with open(weight_path, "rb") as f:
                 cnn = pickle.load(f)
