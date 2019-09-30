@@ -2,10 +2,10 @@ import io
 import imageio
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 
 class LogisticRegression:
 
@@ -71,8 +71,8 @@ class LogisticRegression:
         y = self.predict(X, theta)
         y1 = y[:num_points, :]
         y2 = y[num_points:, :]
-        plt.clf()
         fig = plt.figure(0, figsize=(6, 6))
+        plt.clf()
         ax = fig.add_subplot(111, projection="3d")
         ax.set_title("Loss: " + str(cost))
         ax.scatter(X1[:, 0], X1[:, 1], y1, c="b", label="Class 1")
@@ -125,5 +125,10 @@ class LogisticRegression:
         return pred
 
 if __name__ == "__main__":
-    lr = LogisticRegression(server=True)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Logistic Regression Visualization.")
+    parser.add_argument("--save", action="store_true", help="Use this option to save in a file.")
+    args = parser.parse_args()
+    lr = LogisticRegression(server=args.save)
     lr.exec()

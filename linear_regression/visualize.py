@@ -113,7 +113,13 @@ class LinearRegression:
 
 
 if __name__ == '__main__':
-    lr = LinearRegression(alpha=0.01, noise=20, degree=1, server=True)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Linear Regression Visualization.")
+    parser.add_argument("--save", action="store_true", help="Use this option to save in a file.")
+    args = parser.parse_args()
+
+    lr = LinearRegression(alpha=0.01, noise=20, degree=1, server=args.save)
     lr.exec()
-    lr = LinearRegression(alpha=0.01, noise=30, degree=2, server=True)
+    lr = LinearRegression(alpha=0.01, noise=30, degree=2, server=args.save)
     lr.exec()
