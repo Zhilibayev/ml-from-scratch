@@ -3,7 +3,7 @@
 ## About
 This ML repository is all about coding Machine Learning algorithms from scratch by Numpy with the math under the hood without Auto-Differentiation frameworks like Tensorflow, Pytorch, etc. Some advanced models in Computer Vision, NLP require Tensorflow to quickly get the idea written in paper.
 
-## How this repository construct?
+## Repository structure
 As a software engineer, I follow the principle of OOP to construct the repository. You can see that `NeuralNetwork` class will use `FCLayer`, `BatchNormLayer`, `ActivationLayer` class and `CNN` class will use `ConvLayer`, `PoolingLayer`, `FCLayer`, `ActivationLayer`,... This helps me easily reuse every piece of code I wrote as well as for readable code. 
 
 ## Table of contents
