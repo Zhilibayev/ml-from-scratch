@@ -36,7 +36,7 @@ class LogisticRegression:
 
         Parameter
         ---------
-        :X: matrix of dataset. shape = (n, d) with n is number of training, d
+        X: matrix of dataset. shape = (n, d) with n is number of training, d
             is dimension of each vector.
 
         Return
@@ -52,8 +52,6 @@ class LogisticRegression:
         Compute cross entropy loss.
         """
         m = y_true.shape[0]
-        y_pred[y_pred == 0] = 1e-9
-        y_pred[y_pred == 1] = 1 - 1e-9
         return -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1 - y_pred))/m
 
     def _gradient(self, X, y_true, y_pred):

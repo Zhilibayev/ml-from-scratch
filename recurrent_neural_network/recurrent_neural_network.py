@@ -39,6 +39,10 @@ class RecurrentNeuralNetwork(NeuralNetwork):
         Parameters
         ----------
         X: time series input, shape = (N, T, D)
+
+        Returns
+        -------
+        Y_hat: softmax output at every step, shape = (N, T, C)
         """
         m, timesteps, _ = X.shape
         h0 = np.zeros(shape=(m, self.hidden_units))
@@ -68,9 +72,9 @@ class RecurrentNeuralNetwork(NeuralNetwork):
         delta = np.einsum("ntc,hc->nth", delta, self.Wy)
         d_states = np.einsum("ntk,hk->nth", tanh_grad(self.states), self.Waa)
 
-        # for t in reversed(range(time_steps)):
-        #     for i in range(0, t):
-        #         dWaa += delta[:, t, :] * np.prod(d_states[:, i+1:t, :], axis=1)
+        for t in reversed(range(time_steps)):
+            for i in range(0, t):
+                dWaa += delta[:, t, :] * np.prod(d_states[:, i+1:t, :], axis=1)
         # self.update_params(dWy, dby, dWaa, dWax, dba)
 
     def train(self, X_train, Y_train):
