@@ -2,6 +2,8 @@
 
 ### Visualization
 
+<img src="logistic_regression.gif" />
+
 `python visualize.py <option>`
 
 option:
