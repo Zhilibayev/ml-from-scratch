@@ -1,8 +1,8 @@
 # Linear Regression
 
-<img src="linear_regression.gif" />
-
 ### Visualization
+
+<img src="linear_regression.gif" />
 
 `python visualize.py <option>`
 
